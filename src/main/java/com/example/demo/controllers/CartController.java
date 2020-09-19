@@ -22,16 +22,22 @@ import com.example.demo.model.requests.ModifyCartRequest;
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
-	
-	@Autowired
+
 	private UserRepository userRepository;
-	
-	@Autowired
 	private CartRepository cartRepository;
-	
-	@Autowired
 	private ItemRepository itemRepository;
-	
+
+	@Autowired
+	public CartController(
+			UserRepository userRepository,
+			CartRepository cartRepository,
+			ItemRepository itemRepository
+	) {
+		this.userRepository = userRepository;
+		this.cartRepository = cartRepository;
+		this.itemRepository = itemRepository;
+	}
+
 	@PostMapping("/addToCart")
 	public ResponseEntity<Cart> addTocart(@RequestBody ModifyCartRequest request) {
 		User user = userRepository.findByUsername(request.getUsername());
@@ -44,11 +50,11 @@ public class CartController {
 		}
 		Cart cart = user.getCart();
 		IntStream.range(0, request.getQuantity())
-			.forEach(i -> cart.addItem(item.get()));
+				.forEach(i -> cart.addItem(item.get()));
 		cartRepository.save(cart);
 		return ResponseEntity.ok(cart);
 	}
-	
+
 	@PostMapping("/removeFromCart")
 	public ResponseEntity<Cart> removeFromcart(@RequestBody ModifyCartRequest request) {
 		User user = userRepository.findByUsername(request.getUsername());
@@ -61,7 +67,7 @@ public class CartController {
 		}
 		Cart cart = user.getCart();
 		IntStream.range(0, request.getQuantity())
-			.forEach(i -> cart.removeItem(item.get()));
+				.forEach(i -> cart.removeItem(item.get()));
 		cartRepository.save(cart);
 		return ResponseEntity.ok(cart);
 	}
