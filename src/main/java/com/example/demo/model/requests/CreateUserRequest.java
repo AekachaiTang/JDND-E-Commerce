@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreateUserRequest {
 
-
 	@JsonProperty
 	private String username;
 
@@ -37,6 +36,5 @@ public class CreateUserRequest {
 	public void setConfirmPassword(String confirmPassword) {
 		this.confirmPassword = confirmPassword;
 	}
-
 
 }
