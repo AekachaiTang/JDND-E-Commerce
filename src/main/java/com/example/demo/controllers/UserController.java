@@ -2,7 +2,7 @@ package com.example.demo.controllers;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,53 +25,49 @@ import com.example.demo.model.requests.CreateUserRequest;
 @RequestMapping("/api/user")
 public class UserController {
 
-	private static final Logger log = LoggerFactory.getLogger(UserController.class);
-	private UserRepository userRepository;
-	private CartRepository cartRepository;
-	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	private static final org.apache.log4j.Logger log = Logger.getLogger(UserController.class);
 
 	@Autowired
-	public UserController(
-			UserRepository userRepository,
-			CartRepository cartRepository,
-			BCryptPasswordEncoder bCryptPasswordEncoder
-	) {
-		this.userRepository = userRepository;
-		this.cartRepository = cartRepository;
-		this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-	}
+	private UserRepository userRepository;
+
+	@Autowired
+	private CartRepository cartRepository;
+
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
 	@GetMapping("/id/{id}")
 	public ResponseEntity<User> findById(@PathVariable Long id) {
-		log.debug("UserController.findById called with id {}", id);
 		return ResponseEntity.of(userRepository.findById(id));
 	}
 
 	@GetMapping("/{username}")
 	public ResponseEntity<User> findByUserName(@PathVariable String username) {
-		log.debug("UserController.findByUserName called with username {}");
 		User user = userRepository.findByUsername(username);
 		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
 	}
 
 	@PostMapping("/create")
 	public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
-		log.debug("UserController.createUser called with username {}", createUserRequest.getUsername());
+		log.info("Entering Create User method.");
 		User user = new User();
 		user.setUsername(createUserRequest.getUsername());
+		log.info("Username set to " + createUserRequest.getUsername());
 		Cart cart = new Cart();
 		cartRepository.save(cart);
+		if (log.isDebugEnabled())
+			log.debug("Cart for user " + user.getUsername() + " was saved to the repository.");
 		user.setCart(cart);
-		if (
-				createUserRequest.getPassword().length() <= 6 ||
-						!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())
-		) {
-			log.error("Cannot create user {} because the password is invalid", createUserRequest.getUsername());
+		if (createUserRequest.getPassword().length() < 7 ||
+				!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())) {
+			log.error("Error with user password. Cannot create user " + createUserRequest.getUsername());
 			return ResponseEntity.badRequest().build();
 		}
 		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
+		if (log.isDebugEnabled())
+			log.debug("Encrypting password for " + user.getUsername());
 		userRepository.save(user);
-		log.info("New user {} created", createUserRequest.getUsername());
+		log.info("User " + user.getUsername() + " successfully saved.");
 		return ResponseEntity.ok(user);
 	}
 	
